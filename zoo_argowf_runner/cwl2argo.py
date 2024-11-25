@@ -87,7 +87,10 @@ with open("/tmp/cwl_parameters.json", "w") as f:
         workflow_step(
             name="argo-cwl",
             template_ref=TemplateRef(
-                name="argo-cwl-runner", template="calrissian-runner"
+                name=os.environ.get("ARGO_CWL_RUNNER_TEMPLATE", "argo-cwl-runner"),
+                template=os.environ.get(
+                    "ARGO_CWL_RUNNER_ENTRYPOINT", "calrissian-runner"
+                ),
             ),
             parameters=[
                 Parameter(name="entry_point", value=entrypoint),
