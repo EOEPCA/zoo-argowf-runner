@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "zoo-argowf-runner"
+description = "Zoo runner using Argo Workflows to process an Application Package encoded in CWL."
+dynamic = ["version"]
+readme = "README.md"
+requires-python = ">=3.8"
+
+dependencies = []
+
+
+[tool.hatch.version]
+path = "zoo_argowf_runner/__about__.py"
+
+[tool.hatch.envs.default]
+dependencies = [
+    "PyYAML",
+    "hera",
+    "cwl-utils",
+    "click",
+    "cwl-utils==0.14",
+    "attrs",
+    "loguru",
+
+]
