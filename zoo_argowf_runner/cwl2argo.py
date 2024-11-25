@@ -126,6 +126,10 @@ with open("/tmp/cwl_parameters.json", "w") as f:
                     "name": "stac-catalog",
                     "expression": "steps['argo-cwl'].outputs.parameters['stac-catalog']",
                 },
+                {
+                    "name": "feature-collection",
+                    "expression": "steps['argo-cwl'].outputs.parameters['feature-collection']",
+                },
             ],
             outputs_artifacts=[
                 {
