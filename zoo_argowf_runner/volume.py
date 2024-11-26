@@ -1,5 +1,5 @@
 # Description: This file contains the functions to create the volume related templates for the Argo workflows.
-from typing import Optional
+from typing import Optional, List, Dict
 
 from hera.workflows.models import (
     ConfigMapVolumeSource,
@@ -19,7 +19,7 @@ def volume_claim_template(
     name: str,
     storageClassName: Optional[str] = None,
     storageSize: Optional[str] = None,
-    accessMode: Optional[list[str]] = None,
+    accessMode: Optional[List[str]] = None,
 ) -> PersistentVolumeClaim:
     return PersistentVolumeClaim(
         metadata=ObjectMeta(name=name),
@@ -40,7 +40,7 @@ def secret_volume(name: str, secretName: str) -> Volume:
 
 
 def config_map_volume(
-    name: str, configMapName: str, items: list[dict], defaultMode: int, optional: bool
+    name: str, configMapName: str, items: List[dict], defaultMode: int, optional: bool
 ) -> Volume:
     keyToPath_items = []
     for item in items:

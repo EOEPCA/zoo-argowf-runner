@@ -24,6 +24,7 @@ from hera.workflows.models import (
 )
 
 from typing import Optional
+from typing import List, Dict
 
 
 def synchronization(
@@ -43,8 +44,8 @@ def synchronization(
 
 def workflow_step(
     name: str,
-    parameters: Optional[list[Parameter]] = None,
-    artifacts: Optional[list[Artifact]] = None,
+    parameters: Optional[List[Parameter]] = None,
+    artifacts: Optional[List[Artifact]] = None,
     template: Optional[str] = None,
     template_ref: Optional[TemplateRef] = None,
 ) -> WorkflowStep:
@@ -58,11 +59,11 @@ def workflow_step(
 
 def template(
     name: str,
-    subStep: Optional[list[WorkflowStep]] = None,
-    inputs_parameters: Optional[list[dict] | Inputs] = None,
-    inputs_artifacts: Optional[list[dict] | Inputs] = None,
-    outputs_parameters: Optional[list[dict] | Outputs] = None,
-    outputs_artifacts: Optional[list[dict] | Outputs] = None,
+    subStep: Optional[List[WorkflowStep]] = None,
+    inputs_parameters: Optional[List[dict] | Inputs] = None,
+    inputs_artifacts: Optional[List[dict] | Inputs] = None,
+    outputs_parameters: Optional[List[dict] | Outputs] = None,
+    outputs_artifacts: Optional[List[dict] | Outputs] = None,
     script: Optional[ScriptTemplate] = None,
 ) -> Steps:
 
@@ -75,13 +76,13 @@ def template(
     inputs = Inputs()
     outputs = Outputs()
 
-    if isinstance(inputs_parameters, list):
+    if isinstance(inputs_parameters, List):
         parameters = [Parameter(name=elem["name"]) for elem in inputs_parameters]
         inputs.parameters = parameters
     elif isinstance(inputs_parameters, Inputs):
         inputs = inputs_parameters
 
-    if isinstance(inputs_artifacts, list):
+    if isinstance(inputs_artifacts, List):
         artifacts = [
             Artifact(name=elem["name"], from_expression=elem["from_expression"])
             for elem in inputs_artifacts
@@ -90,7 +91,7 @@ def template(
     elif isinstance(inputs_artifacts, Inputs):
         inputs = inputs_artifacts
 
-    if isinstance(outputs_parameters, list):
+    if isinstance(outputs_parameters, List):
         if "expression" in outputs_parameters[0].keys():
             parameters = [
                 Parameter(
@@ -108,7 +109,7 @@ def template(
     elif isinstance(outputs_parameters, Outputs):
         outputs = outputs_parameters
 
-    if isinstance(outputs_artifacts, list):
+    if isinstance(outputs_artifacts, List):
         artifacts = [
             Artifact(name=elem["name"], from_expression=elem["from_expression"])
             for elem in outputs_artifacts
@@ -136,12 +137,12 @@ def generate_workflow(
     entrypoint: str,
     service_account_name: Optional[str] = None,
     annotations: Optional[dict] = None,
-    inputs: Optional[list[dict]] = None,
+    inputs: Optional[List[dict]] = None,
     synchronization: Optional[Synchronization] = None,
-    volume_claim_template: Optional[list[PersistentVolumeClaim]] = None,
-    secret_volume: Optional[list[Volume]] = None,
-    config_map_volume: Optional[list[Volume]] = None,
-    templates: Optional[list[Steps]] = None,
+    volume_claim_template: Optional[List[PersistentVolumeClaim]] = None,
+    secret_volume: Optional[List[Volume]] = None,
+    config_map_volume: Optional[List[Volume]] = None,
+    templates: Optional[List[Steps]] = None,
     namespace: Optional[str] = None,
 ):
 
