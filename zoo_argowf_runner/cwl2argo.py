@@ -171,7 +171,7 @@ with open("/tmp/cwl_parameters.json", "w") as f:
                 {"name": "workflow", "path": "/tmp/cwl_workflow.json"},
             ],
             script=ScriptTemplate(
-                image="docker.io/library/prepare:0.1",
+                image="docker.io/library/python:3.9",
                 resources=ResourceRequirements(
                     requests={"memory": Quantity(__root__="1Gi"), "cpu": int(1)}
                 ),
