@@ -147,11 +147,11 @@ class Execution(object):
             workflow_status.get("status")
             .get("nodes")
             .get(self.workflow_name)
-            .get("outputs")
-            .get("parameters")
+            .get("outputs", {})
+            .get("parameters", {})  # it's a list
         ):
             if output_parameter.get("name") in [output_parameter_name]:
-                return output_parameter.get("value")
+                return output_parameter.get("value", {})
 
     def get_output(self):
         # get the results output from the execution using the Argo Workflows API
@@ -192,7 +192,7 @@ class Execution(object):
 
         return tool_logs
 
-    def run(self):
+    def run(self, **kwargs):
         # this method creates and submits the Argo Workflow object using the CWL and parameters
 
         inputs = {"inputs": self.processing_parameters}
@@ -207,6 +207,7 @@ class Execution(object):
             max_ram=self.max_ram,
             storage_class=self.storage_class,
             namespace=self.namespace,
+            **kwargs,
         )
 
         workflows_service = WorkflowsService(

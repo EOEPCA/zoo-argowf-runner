@@ -7,7 +7,11 @@ from typing import Union
 from zoo_argowf_runner.handlers import ExecutionHandler
 from zoo_argowf_runner.argo_api import Execution
 from zoo_argowf_runner.zoo_helpers import ZooConf, ZooInputs, ZooOutputs, CWLWorkflow
-
+from zoo_argowf_runner.volume import (
+    config_map_volume,
+    secret_volume,
+    volume_claim_template,
+)
 
 try:
     import zoo
@@ -144,6 +148,7 @@ class ZooArgoWorkflowsRunner:
         self.update_status(progress=5, message="starting execution")
 
         processing_parameters = {
+            **self.handler.get_additional_parameters(),
             **self.get_processing_parameters(),
         }
 
@@ -165,7 +170,29 @@ class ZooArgoWorkflowsRunner:
             handler=self.handler,
         )
 
-        self.execution.run()
+        additional_configmaps = [
+            config_map_volume(
+                name="cwl-wrapper-config-vol",
+                configMapName="cwl-wrapper-config",
+                items=[
+                    {"key": "main.yaml", "path": "main.yaml", "mode": 420},
+                    {"key": "rules.yaml", "path": "rules.yaml", "mode": 420},
+                    {"key": "stage-in.cwl", "path": "stage-in.cwl", "mode": 420},
+                    {"key": "stage-out.cwl", "path": "stage-out.cwl", "mode": 420},
+                ],
+                defaultMode=420,
+                optional=False,
+            )
+        ]
+
+        additional_secrets = [
+            secret_volume(name="usersettings-vol", secretName="user-settings")
+        ]
+
+        self.execution.run(
+            additional_configmaps=additional_configmaps,
+            additional_secrets=additional_secrets,
+        )
 
         self.update_status(progress=20, message="execution submitted")
 

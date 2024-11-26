@@ -33,6 +33,7 @@ def cwl_to_argo(
     max_ram: Optional[str] = "4Gi",
     storage_class: Optional[str] = "standard",
     namespace: Optional[str] = "default",
+    **kwargs,
 ):
 
     prepare_content = f"""
@@ -71,9 +72,18 @@ with open("/tmp/cwl_parameters.json", "w") as f:
         ),
     ]
 
-    secret_vl_list = [
-        secret_volume(name="usersettings-vol", secretName="user-settings")
-    ]
+    config_map_vl_list = []
+
+    if "additional_configmaps" in kwargs:
+        config_map_vl_list.extend(kwargs["additional_configmaps"])
+
+    secret_vl_list = []
+
+    if "additional_secrets" in kwargs:
+        secret_vl_list.extend(kwargs["additional_secrets"])
+
+    #    secret_volume(name="usersettings-vol", secretName="user-settings")
+    # ]
 
     workflow_sub_step = [
         workflow_step(
@@ -186,7 +196,7 @@ with open("/tmp/cwl_parameters.json", "w") as f:
         synchronization=synchro,
         volume_claim_template=vl_claim_t_list,
         secret_volume=secret_vl_list,
-        config_map_volume=[],
+        config_map_volume=config_map_vl_list,
         templates=templates,
         namespace=namespace,
     )

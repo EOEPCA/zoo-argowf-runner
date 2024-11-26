@@ -38,7 +38,21 @@ class ArgoWFRunnerExecutionHandler(ExecutionHandler):
         pass
 
     def get_additional_parameters(self):
-        return {}
+
+        logger.info("get_additional_parameters")
+
+        additional_parameters = {
+            "s3_bucket": "results",
+            "sub_path": self.conf["lenv"]["usid"],
+            "region_name": "it-rom",
+            "aws_secret_access_key": "minio-admin",
+            "aws_access_key_id": "minio-admin",
+            "endpoint_url": "http://minio.ns1.svc.cluster.local:9000",
+        }
+
+        logger.info(f"additional_parameters: {additional_parameters.keys()}")
+
+        return additional_parameters
 
     def handle_outputs(self, log, output, usage_report, tool_logs, **kwargs):
         logger.info("Handling outputs")

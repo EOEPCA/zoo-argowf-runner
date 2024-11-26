@@ -99,3 +99,37 @@ And the artifacts:
 - `calrissian-report` is the Calrissian usage report
 
 See the example provided in folder `example`
+
+## Caveats
+
+### Additional volumes in the Argo Workflows WorkflowTemplate that runs the CWL
+
+Let's say one wants to add a configmap on the Argo Workflows WorkflowTemplate that runs the CWL.
+
+By design, this volume must also be declared in an Argo Workflows Workflow that wants to run the WorkflowTemplate in a step.
+
+This means that if the Argo Workflows WorkflowTemplate that runs the CWL declares:
+
+```yaml
+volumes:
+  - name: cwl-wrapper-config-vol
+    configMap:
+      name: cwl-wrapper-config
+      items:
+        - key: main.yaml
+        - key: rules.yaml
+        - key: stage-in.cwl
+        - key: stage-out.cwl
+```
+
+The 
+
+```python
+config_map_volume(
+    name="cwl-wrapper-config-vol",
+    configMapName="cwl-wrapper-config",
+    items=[{"key": "main.yaml"}, {"key": "rules.yaml"}, {"key": "stage-in.yaml"}, {"key": "stage-out.yaml"}],
+    defaultMode=420,
+    optional=False
+)
+```

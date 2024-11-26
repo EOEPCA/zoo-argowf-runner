@@ -29,7 +29,10 @@ class TestWaterBodiesService(unittest.TestCase):
         os.environ["ARGO_WF_TOKEN"] = (
             "eyJhbGciOiJSUzI1NiIsImtpZCI6ImZSUUYycDZNbnI4MTZLeXVFUnpyZk9FcUJGTHdQQzI4SURGdHhQc0pzRXMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJuczEiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlY3JldC5uYW1lIjoiYXJnby5zZXJ2aWNlLWFjY291bnQtdG9rZW4iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiYXJnbyIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjExZjI1NDUxLWE4OGEtNDFkZC1hNGIxLTJlNTM3ZGUyOGU3NiIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDpuczE6YXJnbyJ9.dUVo3WCJgoVN5NVh3VVeKw7uF6hE6moCj8Mu5W7ioJ4M_lG_bJ4BZ7XRaJVrQMF--vMQAiNDr-_GSC0R7ItKmRqhafkONy61MeEDz_6u-j0ay4fj8qofgBatnF7lWcVVvNklVZxZ4IGb62SJepAvzerxsz5HhSG8icn9U0cUsyg4Vw_wsHntic-yFY4Eyp6kYSEXO5G2v_0KXLKcpLB41YLfMQaE8cu0ghmE5mFmKkKOf0oDHhLlch-j_K0IpGvXKcjZGlwjiukD1dCL3E6BSHYMutuz4n27Bg62nf3rZBErUkJB2GRjN-tKIoYMrEuwyEbv7TSuCeqHGyfWn3Tu0A"
         )
-        os.environ["ARGO_WF_SYNCHRONIZATION_CM"] = "semaphore-argo-cwl-runner"
+        os.environ["ARGO_WF_SYNCHRONIZATION_CM"] = (
+            "semaphore-argo-cwl-runner-stage-in-out"
+        )
+        os.environ["ARGO_CWL_RUNNER_TEMPLATE"] = "argo-cwl-runner-stage-in-out"
         os.environ["DEFAULT_VOLUME_SIZE"] = "12Gi"
 
         cls.zoo = zoo
