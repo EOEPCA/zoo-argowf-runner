@@ -1,4 +1,5 @@
 # Description: This file contains the functions to generate the Argo workflow templates.
+from __future__ import annotations
 from hera.workflows import (
     Workflow,
     Steps,

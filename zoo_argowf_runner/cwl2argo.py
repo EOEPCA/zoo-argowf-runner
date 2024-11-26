@@ -1,4 +1,5 @@
 # Description: This file contains the function to convert a CWL workflow to an Argo workflow.
+from __future__ import annotations
 import os
 from typing import Optional
 from hera.workflows.models import (
