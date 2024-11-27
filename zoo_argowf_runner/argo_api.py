@@ -161,23 +161,27 @@ class Execution(object):
 
     def get_output(self):
         # get the results output from the execution using the Argo Workflows API
-        self.get_execution_output_parameter("results")
+        return self.get_feature_collection()
+
+    def get_results(self):
+        # get the results output from the execution using the Argo Workflows API
+        return self.get_execution_output_parameter("results")
 
     def get_log(self):
         # get the log output from the execution using the Argo Workflows API
-        self.get_execution_output_parameter("log")
+        return self.get_execution_output_parameter("log")
 
     def get_usage_report(self):
         # get the usage report output from the execution using the Argo Workflows API
-        self.get_execution_output_parameter("usage-report")
+        return self.get_execution_output_parameter("usage-report")
 
     def get_stac_catalog(self):
         # get the STAC catalog output from the execution using the Argo Workflows API
-        self.get_execution_output_parameter("stac-catalog")
+        return self.get_execution_output_parameter("stac-catalog")
 
     def get_feature_collection(self):
         # get the feature collection output from the execution using the Argo Workflows API
-        self.get_execution_output_parameter("feature-collection")
+        return self.get_execution_output_parameter("feature-collection")
 
     def get_tool_logs(self):
         # this method gets the tool logs from the execution using the Argo Workflows API
