@@ -49,12 +49,14 @@ def workflow_step(
     artifacts: Optional[List[Artifact]] = None,
     template: Optional[str] = None,
     template_ref: Optional[TemplateRef] = None,
+    continue_on: Optional[Dict] = None,
+    when: Optional[str] = None,
 ) -> WorkflowStep:
 
     arguments = Arguments(parameters=parameters, artifacts=artifacts)
 
     return WorkflowStep(
-        name=name, template=template, arguments=arguments, template_ref=template_ref
+        name=name, template=template, arguments=arguments, template_ref=template_ref, continue_on=continue_on, when=when,
     )
 
 
@@ -93,7 +95,7 @@ def template(
         inputs = inputs_artifacts
 
     if isinstance(outputs_parameters, List):
-        if "expression" in outputs_parameters[0].keys():
+        if len(outputs_parameters) != 0 and "expression" in outputs_parameters[0].keys():
             parameters = [
                 Parameter(
                     name=elem["name"],
@@ -101,7 +103,7 @@ def template(
                 )
                 for elem in outputs_parameters
             ]
-        if "path" in outputs_parameters[0].keys():
+        if len(outputs_parameters) != 0 and "path" in outputs_parameters[0].keys():
             parameters = [
                 Parameter(name=elem["name"], value_from=ValueFrom(path=elem["path"]))
                 for elem in outputs_parameters

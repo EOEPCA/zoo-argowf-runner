@@ -115,6 +115,7 @@ with open("/tmp/cwl_parameters.json", "w") as f:
                     name="cwl", value="{{ steps.prepare.outputs.parameters.workflow }}"
                 ),
             ],
+            continue_on={"error": "true"},
         ),
     ]
 
@@ -143,6 +144,10 @@ with open("/tmp/cwl_parameters.json", "w") as f:
                 {
                     "name": "feature-collection",
                     "expression": "steps['argo-cwl'].outputs.parameters['feature-collection']",
+                },
+                {
+                    "name": "outcome",
+                    "expression": "steps['argo-cwl'].outputs.parameters['outcome']",
                 },
             ],
             outputs_artifacts=[
@@ -180,7 +185,7 @@ with open("/tmp/cwl_parameters.json", "w") as f:
                 command=["python"],
                 source=prepare_content,
             ),
-        ),
+        )
     ]
 
     synchro = synchronization(

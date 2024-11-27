@@ -130,6 +130,12 @@ class Execution(object):
 
     def is_successful(self):
         # this method checks if the execution was successful
+        if self.get_execution_output_parameter("outcome") == "succeeded":
+            self.successful = True
+
+        if self.get_execution_output_parameter("outcome") == "failure":
+            self.successful = False
+        
         return self.successful
 
     def get_execution_output_parameter(self, output_parameter_name):

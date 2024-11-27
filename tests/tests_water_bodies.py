@@ -35,7 +35,7 @@ class TestWaterBodiesService(unittest.TestCase):
         os.environ["ARGO_CWL_RUNNER_TEMPLATE"] = "argo-cwl-runner-stage-in-out"
         os.environ["DEFAULT_VOLUME_SIZE"] = "12Gi"
         os.environ["STORAGE_CLASS"] = "standard"
-        
+
         cls.zoo = zoo
 
         conf = {}
