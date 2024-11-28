@@ -1,10 +1,10 @@
 import os
 import unittest
 
-from tests.water_bodies.service import water_bodies
+from tests.water_bodies_cloud_native.service import water_bodies
 
 
-class TestWaterBodiesService(unittest.TestCase):
+class TestWaterBodiesCloudNativeService(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         class ZooStub(object):
@@ -39,7 +39,7 @@ class TestWaterBodiesService(unittest.TestCase):
         cls.zoo = zoo
 
         conf = {}
-        conf["lenv"] = {"message": "", "Identifier": "water-bodies", "usid": "1234"}
+        conf["lenv"] = {"message": "", "Identifier": "water-bodies", "usid": "def-1234"}
         conf["tmpPath"] = "/tmp"
         conf["main"] = {"tmpUrl": "http://localhost/logs/"}
         conf["auth_env"] = {"user": "ns1"}
