@@ -7,12 +7,7 @@ from typing import Union
 from zoo_argowf_runner.handlers import ExecutionHandler
 from zoo_argowf_runner.argo_api import Execution
 from zoo_argowf_runner.zoo_helpers import ZooConf, ZooInputs, ZooOutputs, CWLWorkflow
-from zoo_argowf_runner.volume import (
-    config_map_volume,
-    secret_volume,
-    volume_claim_template,
-)
-
+from zoo_argowf_runner.volume import VolumeTemplates
 
 try:
     import zoo
@@ -172,22 +167,22 @@ class ZooArgoWorkflowsRunner:
         )
 
         additional_configmaps = [
-            config_map_volume(
+            VolumeTemplates.create_config_map_volume(
                 name="cwl-wrapper-config-vol",
-                configMapName="cwl-wrapper-config",
+                config_map_name="cwl-wrapper-config",
                 items=[
                     {"key": "main.yaml", "path": "main.yaml", "mode": 420},
                     {"key": "rules.yaml", "path": "rules.yaml", "mode": 420},
                     {"key": "stage-in.cwl", "path": "stage-in.cwl", "mode": 420},
                     {"key": "stage-out.cwl", "path": "stage-out.cwl", "mode": 420},
                 ],
-                defaultMode=420,
+                default_mode=420,
                 optional=False,
             )
         ]
 
         additional_secrets = [
-            secret_volume(name="usersettings-vol", secretName="user-settings")
+            VolumeTemplates.create_secret_volume(name="usersettings-vol", secret_name="user-settings")
         ]
 
         self.execution.run(
