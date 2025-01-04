@@ -2,6 +2,7 @@
 from __future__ import annotations
 import os
 from typing import Optional
+
 from hera.workflows.models import (
     Parameter,
     Quantity,
@@ -10,18 +11,9 @@ from hera.workflows.models import (
     TemplateRef,
 )
 
-from zoo_argowf_runner.template import (
-    workflow_step,
-    template,
-    generate_workflow,
-    synchronization,
-)
+from zoo_argowf_runner.template import WorkflowTemplates
 from zoo_argowf_runner.zoo_helpers import CWLWorkflow
-from zoo_argowf_runner.volume import (
-    volume_claim_template,
-    config_map_volume,
-    secret_volume,
-)
+from zoo_argowf_runner.volume import VolumeTemplates
 
 
 def cwl_to_argo(
@@ -36,6 +28,23 @@ def cwl_to_argo(
     namespace: Optional[str] = "default",
     **kwargs,
 ):
+    """
+    Converts a CWLWorkflow object to an Argo Workflow specification.
+
+    Args:
+        workflow (CWLWorkflow): The CWL workflow to be converted.
+        entrypoint (str): The entrypoint step in the CWL workflow.
+        argo_wf_name (str): The name for the Argo workflow.
+        inputs (Optional[dict]): Input parameters for the workflow execution.
+        volume_size (Optional[str]): Size of the volume to be used by the workflow.
+        max_cores (Optional[int]): Maximum CPU cores allowed for the workflow.
+        max_ram (Optional[str]): Maximum memory allowed for the workflow.
+        storage_class (Optional[str]): The storage class for volume claims.
+        namespace (Optional[str]): Kubernetes namespace to run the workflow in.
+
+    Returns:
+        dict: An Argo workflow specification generated from the CWL workflow.
+    """
 
     prepare_content = f"""
 import json
@@ -65,11 +74,11 @@ with open("/tmp/cwl_parameters.json", "w") as f:
     annotations["eoap.ogc.org/abstract"] = workflow.get_doc()
 
     vl_claim_t_list = [
-        volume_claim_template(
+        VolumeTemplates.create_volume_claim_template(
             name="calrissian-wdir",
-            storageClassName=storage_class,
-            storageSize=volume_size,
-            accessMode=["ReadWriteMany"],
+            storage_class_name=storage_class,
+            storage_size=volume_size,
+            access_modes=["ReadWriteMany"],
         ),
     ]
 
@@ -87,7 +96,7 @@ with open("/tmp/cwl_parameters.json", "w") as f:
     # ]
 
     workflow_sub_step = [
-        workflow_step(
+        WorkflowTemplates.create_workflow_step(
             name="prepare",
             template="prepare",
             parameters=[
@@ -95,7 +104,7 @@ with open("/tmp/cwl_parameters.json", "w") as f:
                 for key in ["inputs"]
             ],
         ),
-        workflow_step(
+        WorkflowTemplates.create_workflow_step(
             name="argo-cwl",
             template_ref=TemplateRef(
                 name=os.environ.get("ARGO_CWL_RUNNER_TEMPLATE", "argo-cwl-runner"),
@@ -120,9 +129,9 @@ with open("/tmp/cwl_parameters.json", "w") as f:
     ]
 
     templates = [
-        template(
+        WorkflowTemplates.create_template(
             name=entrypoint,
-            subStep=workflow_sub_step,
+            sub_steps=workflow_sub_step,
             inputs_parameters=[{"name": key} for key in ["inputs"]],
             outputs_parameters=[
                 {
@@ -169,7 +178,7 @@ with open("/tmp/cwl_parameters.json", "w") as f:
                 },
             ],
         ),
-        template(
+        WorkflowTemplates.create_template(
             name="prepare",
             inputs_parameters=[{"name": key} for key in ["inputs"]],
             outputs_parameters=[
@@ -188,13 +197,13 @@ with open("/tmp/cwl_parameters.json", "w") as f:
         )
     ]
 
-    synchro = synchronization(
-        type="semaphore",
-        configMapRef_key="workflow",
-        configMapRef_name=os.environ.get("ARGO_WF_SYNCHRONIZATION_CM"),
+    synchro = WorkflowTemplates.create_synchronization(
+        sync_type="semaphore",
+        config_map_ref_key="workflow",
+        config_map_ref_name=os.environ.get("ARGO_WF_SYNCHRONIZATION_CM"),
     )
 
-    return generate_workflow(
+    return WorkflowTemplates.generate_workflow(
         name=argo_wf_name,
         entrypoint=entrypoint,
         annotations=annotations,
