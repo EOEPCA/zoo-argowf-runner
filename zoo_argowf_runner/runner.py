@@ -164,6 +164,8 @@ class ZooArgoWorkflowsRunner:
             max_ram=self.get_max_ram(),
             storage_class=self.storage_class,
             handler=self.handler,
+            tmp_path=self.zoo_conf.conf["main"]["tmpPath"],
+            usid=self.zoo_conf.conf["lenv"]["usid"],
         )
 
         additional_configmaps = [
