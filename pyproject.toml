@@ -9,7 +9,15 @@ dynamic = ["version"]
 readme = "README.md"
 requires-python = ">=3.8"
 
-dependencies = []
+dependencies = [
+    "PyYAML",
+    "hera",
+    "cwl-utils",
+    "click",
+    "cwl-utils==0.14",
+    "attrs",
+    "loguru"
+]
 
 
 [tool.hatch.version]
@@ -23,6 +31,17 @@ dependencies = [
     "click",
     "cwl-utils==0.14",
     "attrs",
-    "loguru",
+    "loguru"
+]
 
+[tool.hatch.envs.test]
+dependencies = [
+    "nose2",
+    "PyYAML",
+    "hera",
+    "cwl-utils",
+    "click",
+    "cwl-utils==0.14",
+    "attrs",
+    "loguru"
 ]

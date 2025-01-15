@@ -1,4 +1,5 @@
 # this file contains the class that handles the execution of the workflow using hera-workflows and Argo Workflows API
+from typing import Callable, Optional, Tuple
 import requests
 import json
 import os
@@ -9,23 +10,42 @@ from zoo_argowf_runner.cwl2argo import cwl_to_argo
 from zoo_argowf_runner.zoo_helpers import CWLWorkflow
 
 
-class Execution(object):
+class Execution:
+    """
+    Handles the execution of workflows using the Hera Workflows library and Argo Workflows API.
+    """
+
     def __init__(
         self,
-        namespace,
+        namespace: str,
         workflow: CWLWorkflow,
-        entrypoint,
-        workflow_name,
-        processing_parameters,
-        volume_size,
-        max_cores,
-        max_ram,
-        storage_class,
-        handler,
-    ):
+        entrypoint: str,
+        workflow_name: str,
+        processing_parameters: dict,
+        volume_size: str,
+        max_cores: int,
+        max_ram: int,
+        storage_class: str,
+        handler: Callable,
+    ) -> None:
+        """
+        Initialize the execution class with workflow and execution parameters.
+
+        :param namespace: Kubernetes namespace where the workflow is executed.
+        :param workflow: CWLWorkflow object representing the workflow definition.
+        :param entrypoint: Entry point for the workflow.
+        :param workflow_name: Unique name for the workflow execution.
+        :param processing_parameters: Dictionary of parameters for the workflow execution.
+        :param volume_size: Size of the volume for the workflow.
+        :param max_cores: Maximum number of CPU cores for the workflow.
+        :param max_ram: Maximum RAM (in MiB) for the workflow.
+        :param storage_class: Storage class for the workflow.
+        :param handler: Callable to handle workflow execution updates.
+        """
 
         self.workflow = workflow
         self.entrypoint = entrypoint
+        self.workflow_name = workflow_name
         self.processing_parameters = processing_parameters
         self.volume_size = volume_size
         self.max_cores = max_cores
@@ -38,7 +58,6 @@ class Execution(object):
         if self.token is None:
             raise ValueError("ARGO_WF_TOKEN environment variable is not set")
 
-        self.workflow_name = workflow_name
         self.namespace = namespace
         self.workflows_service = os.environ.get(
             "ARGO_WF_ENDPOINT", "http://localhost:2746"
@@ -48,10 +67,18 @@ class Execution(object):
         self.successful = False
 
     @staticmethod
-    def get_workflow_status(workflow_name, argo_server, namespace, token):
-        # this method gets the status of the workflow using the Argo Workflows API
+    def get_workflow_status(
+        workflow_name: str, argo_server: str, namespace: str, token: str
+    ) -> Optional[Tuple[str, dict]]:
+        """
+        Fetch the current status of the workflow using the Argo Workflows API.
 
-        # Headers for API request
+        :param workflow_name: Name of the workflow.
+        :param argo_server: URL of the Argo Workflows server.
+        :param namespace: Kubernetes namespace where the workflow is executed.
+        :param token: Bearer token for authentication.
+        :return: Tuple containing the status and workflow information.
+        """
         headers = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
@@ -74,17 +101,19 @@ class Execution(object):
         else:
             print(f"Failed to retrieve workflow status: {response.status_code}")
             return None
+    
+    def monitor(self, interval: int = 30, update_function: Optional[Callable] = None) -> None:
+        """
+        Monitor the execution of the workflow and update the progress.
 
-    def monitor(self, interval=30, update_function=None):
-        # this method monitors the execution of the workflow using the Argo Workflows API
+        :param interval: Time interval (in seconds) between status checks.
+        :param update_function: Callable to handle progress updates.
+        """
 
-        def progress_to_percentage(progress):
-            # Split the string and convert to integers
+        def progress_to_percentage(progress: str) -> int:
+            """Convert progress string (e.g., '2/10') to percentage."""
             completed, total = map(int, progress.split("/"))
-
-            # Calculate percentage
-            percentage = (completed / total) * 100
-            return percentage
+            return int((completed / total) * 100)
 
         while True:
             status, workflow_status = self.get_workflow_status(
@@ -103,12 +132,10 @@ class Execution(object):
                     "Unknown",
                 ]:
                     logger.info(workflow_status.get("status", {}).get("progress"))
-                    progress = progress_to_percentage(
-                        workflow_status.get("status", {}).get("progress", {})
-                    )
-                    update_function(
-                        int(progress), "Argo Workflows is handling the execution"
-                    )
+                    progress = workflow_status.get("status", {}).get("progress", "0/1")
+                    percentage = progress_to_percentage(progress)
+                    update_function(percentage, "Argo Workflows is handling the execution")
+
                 # Check if the workflow has completed
                 if status in ["Succeeded"]:
 
@@ -124,17 +151,28 @@ class Execution(object):
 
             time.sleep(interval)
 
-    def is_completed(self):
-        # this method checks if the execution is completed
+    def is_completed(self) -> bool:
+        """Check if the execution is completed."""
         return self.completed
 
-    def is_successful(self):
-        # this method checks if the execution was successful
+    def is_successful(self) -> bool:
+        """Check if the execution was successful."""
+        if self.get_execution_output_parameter("outcome") == "succeeded":
+            self.successful = True
+
+        if self.get_execution_output_parameter("outcome") == "failure":
+            self.successful = False
+        
         return self.successful
 
-    def get_execution_output_parameter(self, output_parameter_name):
-        # this method gets the output parameter from the execution using the Argo Workflows API
-        logger.info(f"Getting output parameter {output_parameter_name}")
+    def get_execution_output_parameter(self, output_parameter_name: str):
+        """
+        Retrieve the specified output parameter from the workflow execution.
+
+        :param output_parameter_name: Name of the output parameter.
+        :return: Value of the output parameter or None.
+        """
+        logger.info(f"Retrieving output parameter: {output_parameter_name}")
 
         _, workflow_status = self.get_workflow_status(
             workflow_name=self.workflow_name,
@@ -147,37 +185,43 @@ class Execution(object):
             workflow_status.get("status")
             .get("nodes")
             .get(self.workflow_name)
-            .get("outputs")
-            .get("parameters")
+            .get("outputs", {})
+            .get("parameters", {})  # it's a list
         ):
             if output_parameter.get("name") in [output_parameter_name]:
-                return output_parameter.get("value")
+                return output_parameter.get("value", {})
 
     def get_output(self):
-        # get the results output from the execution using the Argo Workflows API
-        self.get_execution_output_parameter("results")
+        """Retrieve the output."""
+        return self.get_feature_collection()
 
-    def get_log(self):
-        # get the log output from the execution using the Argo Workflows API
-        self.get_execution_output_parameter("log")
+    def get_results(self):
+        """Retrieve the 'results' output parameter."""
+        return self.get_execution_output_parameter("results")
+
+    def get_log(self) -> Optional[str]:
+        """Retrieve the 'log' output parameter."""
+        return self.get_execution_output_parameter("log")
 
     def get_usage_report(self):
-        # get the usage report output from the execution using the Argo Workflows API
-        self.get_execution_output_parameter("usage-report")
+        """Retrieve the 'usage-report' output parameter."""
+        return self.get_execution_output_parameter("usage-report")
 
-    def get_stac_catalog(self):
-        # get the STAC catalog output from the execution using the Argo Workflows API
-        self.get_execution_output_parameter("stac-catalog")
+    def get_stac_catalog(self) -> Optional[str]:
+        """Retrieve the 'stac-catalog' output parameter."""
+        return self.get_execution_output_parameter("stac-catalog")
 
-    def get_feature_collection(self):
-        # get the feature collection output from the execution using the Argo Workflows API
-        self.get_execution_output_parameter("feature-collection")
+    def get_feature_collection(self) -> Optional[str]:
+        """Retrieve the 'feature-collection' output parameter."""
+        return self.get_execution_output_parameter("feature-collection")
 
     def get_tool_logs(self):
-        # this method gets the tool logs from the execution using the Argo Workflows API
+        """
+        Retrieve tool logs from the workflow execution and save them locally.
 
-        # Get the usage report
-        usage_report = json.loads(self.get_execution_output_parameter("usage-report"))
+        :return: List of paths to saved tool log files.
+        """
+        usage_report = json.loads(self.get_usage_report())
 
         tool_logs = []
 
@@ -192,9 +236,10 @@ class Execution(object):
 
         return tool_logs
 
-    def run(self):
-        # this method creates and submits the Argo Workflow object using the CWL and parameters
-
+    def run(self, **kwargs) -> None:
+        """
+        Create and submit the Argo Workflow object using the CWL definition and execution parameters.
+        """
         inputs = {"inputs": self.processing_parameters}
 
         wf = cwl_to_argo(
@@ -207,6 +252,7 @@ class Execution(object):
             max_ram=self.max_ram,
             storage_class=self.storage_class,
             namespace=self.namespace,
+            **kwargs,
         )
 
         workflows_service = WorkflowsService(

@@ -7,7 +7,7 @@ from typing import Union
 from zoo_argowf_runner.handlers import ExecutionHandler
 from zoo_argowf_runner.argo_api import Execution
 from zoo_argowf_runner.zoo_helpers import ZooConf, ZooInputs, ZooOutputs, CWLWorkflow
-
+from zoo_argowf_runner.volume import VolumeTemplates
 
 try:
     import zoo
@@ -144,6 +144,7 @@ class ZooArgoWorkflowsRunner:
         self.update_status(progress=5, message="starting execution")
 
         processing_parameters = {
+            **self.handler.get_additional_parameters(),
             **self.get_processing_parameters(),
         }
 
@@ -153,9 +154,7 @@ class ZooArgoWorkflowsRunner:
         self.update_status(progress=15, message="upload required files")
 
         self.execution = Execution(
-            namespace=self.zoo_conf.conf["main"][
-                "namespace"
-            ],  # TODO check this with Gerald
+            namespace=self.zoo_conf.conf["auth_env"]["user"],
             workflow=self.cwl,
             entrypoint=self.get_workflow_id(),
             workflow_name=self.get_workflow_uid(),
@@ -167,7 +166,29 @@ class ZooArgoWorkflowsRunner:
             handler=self.handler,
         )
 
-        self.execution.run()
+        additional_configmaps = [
+            VolumeTemplates.create_config_map_volume(
+                name="cwl-wrapper-config-vol",
+                config_map_name="cwl-wrapper-config",
+                items=[
+                    {"key": "main.yaml", "path": "main.yaml", "mode": 420},
+                    {"key": "rules.yaml", "path": "rules.yaml", "mode": 420},
+                    {"key": "stage-in.cwl", "path": "stage-in.cwl", "mode": 420},
+                    {"key": "stage-out.cwl", "path": "stage-out.cwl", "mode": 420},
+                ],
+                default_mode=420,
+                optional=False,
+            )
+        ]
+
+        additional_secrets = [
+            VolumeTemplates.create_secret_volume(name="usersettings-vol", secret_name="user-settings")
+        ]
+
+        self.execution.run(
+            additional_configmaps=additional_configmaps,
+            additional_secrets=additional_secrets,
+        )
 
         self.update_status(progress=20, message="execution submitted")
 
